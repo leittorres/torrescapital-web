@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin | Torres Capital</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { background-color: #050505; color: #fff; font-family: 'Inter', sans-serif; padding: 15px; margin: 0; }
+        .container { max-width: 800px; margin: 0 auto; width: 100%; }
+        h1 { color: #d4af37; border-bottom: 1px solid #333; padding-bottom: 10px; font-size: 1.5rem; }
+        .review-item { background: #111; padding: 15px; margin-bottom: 15px; border-left: 3px solid #007bff; border-radius: 4px; display: flex; flex-direction: column; gap: 10px;}
+        .btn-approve { background: #28a745; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 3px; flex: 1;}
+        .btn-delete { background: #dc3545; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 3px; flex: 1;}
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        #login-area { display: flex; flex-direction: column; gap: 15px; max-width: 350px; margin: 80px auto; width: 100%; background: #111; padding: 30px; border-radius: 8px; border-top: 3px solid #d4af37;}
+        input { padding: 12px; background: #222; border: 1px solid #333; color: white; width: 100%; border-radius: 4px;}
+        input:focus { outline: none; border-color: #d4af37; }
+        button.login-btn { padding: 12px; background: #d4af37; border: none; font-weight: bold; cursor: pointer; color: #000; border-radius: 4px;}
+        @media (max-width: 600px) {
+            .btn-group { flex-direction: column; }
+        }
+    </style>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyAuX3bCu47kH9pYEw1DYUme8tvT733uOUc",
+          authDomain: "torres-capital-web.firebaseapp.com",
+          projectId: "torres-capital-web",
+          storageBucket: "torres-capital-web.firebasestorage.app",
+          messagingSenderId: "35392624147",
+          appId: "1:35392624147:web:4bc0b5c12a0c569b1d91e6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        const loginArea = document.getElementById('login-area');
+        const adminArea = document.getElementById('admin-area');
+        const listArea = document.getElementById('pending-list');
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                loginArea.style.display = 'none';
+                adminArea.style.display = 'block';
+                loadPendingReviews();
+            } else {
+                loginArea.style.display = 'flex';
+                adminArea.style.display = 'none';
+            }
+        });
+
+        document.getElementById('btn-login').addEventListener('click', () => {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('pass').value;
+            signInWithEmailAndPassword(auth, email, pass).catch(err => alert("Acceso denegado: " + err.message));
+        });
+        
+        document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+
+        async function loadPendingReviews() {
+            listArea.innerHTML = "Cargando...";
+            const q = query(collection(db, "reviews"), where("status", "==", "pending"));
+            const snapshot = await getDocs(q);
+            
+            if(snapshot.empty) {
+                listArea.innerHTML = "<p style='color: #888;'>No hay reseñas pendientes en este momento.</p>";
+                return;
+            }
+
+            let html = "";
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                html += `
+                    <div class="review-item" id="rev-${doc.id}">
+                        <p style="margin: 0; font-size: 0.9rem;"><strong>Real:</strong> ${data.rawName} <br> <strong style="color: #d4af37;">Público:</strong> ${data.name}</p>
+                        <p style="color: #ccc; font-style: italic;">"${data.text}"</p>
+                        <div class="btn-group">
+                            <button class="btn-approve" onclick="window.approveReview('${doc.id}')">Aprobar (Publicar)</button>
+                            <button class="btn-delete" onclick="window.deleteReview('${doc.id}')">Eliminar</button>
+                        </div>
+                    </div>
+                `;
+            });
+            listArea.innerHTML = html;
+        }
+
+        window.approveReview = async (id) => {
+            await updateDoc(doc(db, "reviews", id), { status: "approved" });
+            document.getElementById(`rev-${id}`).style.display = 'none';
+        };
+
+        window.deleteReview = async (id) => {
+            if(confirm("¿Seguro que deseas eliminar esta reseña?")) {
+                await deleteDoc(doc(db, "reviews", id));
+                document.getElementById(`rev-${id}`).style.display = 'none';
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Area -->
+        <div id="login-area">
+            <h2 style="text-align:center; color:#d4af37; margin: 0 0 20px 0;">Administración</h2>
+            <input type="email" id="email" placeholder="Correo Administrador">
+            <input type="password" id="pass" placeholder="Contraseña">
+            <button id="btn-login" class="login-btn">Entrar</button>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="admin-area" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h1>Bandeja de Reseñas</h1>
+                <button id="btn-logout" class="btn-delete" style="flex: 0 1 auto;">Cerrar Sesión</button>
+            </div>
+            
+            <h3 style="margin-top: 20px; color: #fff;">Pendientes de Aprobación</h3>
+            <div id="pending-list" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+</body>
+</html>

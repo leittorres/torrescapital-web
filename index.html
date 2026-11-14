@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torres Capital | Partners</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK (Modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyAuX3bCu47kH9pYEw1DYUme8tvT733uOUc",
+          authDomain: "torres-capital-web.firebaseapp.com",
+          projectId: "torres-capital-web",
+          storageBucket: "torres-capital-web.firebasestorage.app",
+          messagingSenderId: "35392624147",
+          appId: "1:35392624147:web:4bc0b5c12a0c569b1d91e6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        window.firebaseAuth = auth; // Exponer para el modal
+        window.signIn = signInWithEmailAndPassword;
+
+        // Cargar reseñas aprobadas
+        async function loadReviews() {
+            const reviewsContainer = document.getElementById('reviews-container');
+            try {
+                const q = query(collection(db, "reviews"), where("status", "==", "approved"), orderBy("timestamp", "desc"));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    reviewsContainer.innerHTML = '<p style="color: #666; text-align: center; width: 100%;">Aún no hay reseñas públicas.</p>';
+                    return;
+                }
+
+                let html = '';
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    html += `
+                        <div class="review-card reveal">
+                            <div class="review-stars">★★★★★</div>
+                            <p class="review-text">"${data.text}"</p>
+                            <p class="review-author">- ${data.name}</p>
+                        </div>
+                    `;
+                });
+                reviewsContainer.innerHTML = html;
+                
+                // Re-aplicar observer a las nuevas reseñas
+                const newReveals = document.querySelectorAll('.review-card.reveal');
+                newReveals.forEach(el => window.revealOnScroll.observe(el));
+                
+            } catch (error) {
+                console.error("Error cargando reseñas:", error);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadReviews);
+    </script>
+</head>
+<body>
+    <!-- Fondo de Red Cuantitativa (Nodos) -->
+    <canvas id="networkCanvas"></canvas>
+
+    <!-- Navegación -->
+    <nav class="navbar">
+        <div class="logo">TORRES <span>CAPITAL</span></div>
+        <button id="btn-partners" class="btn-partner">Acceso Partners</button>
+    </nav>
+
+    <!-- Modal de Login (Portal Secreto del Admin) -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Acceso Restringido</h2>
+            <p style="color: #888; font-size: 0.9rem; margin-bottom: 20px;">Portal exclusivo para miembros validados de Torres Quant Solutions.</p>
+            <input type="email" id="socio-id" placeholder="ID de Socio" class="modal-input">
+            <input type="password" id="socio-pass" placeholder="Contraseña de Seguridad" class="modal-input">
+            <button id="btn-login-attempt" class="btn-primary" style="width: 100%; margin-top: 10px;">Ingresar al Motor</button>
+            <p id="login-error" style="color: #ff4444; font-size: 0.85rem; margin-top: 15px; display: none;">Acceso denegado. Si eres miembro y perdiste tu acceso, contacta a tu Gestor.</p>
+        </div>
+    </div>
+
+    <!-- Sección Hero (Impacto inicial) -->
+    <header class="hero">
+        <div class="hero-content reveal">
+            <h1>Rentabilidad sin inversión.<br><span class="highlight">Cero riesgo</span> para ti.</h1>
+            <p>Operamos capital propio en mercados internacionales mediante estrategias Delta-Neutral. Únete a nuestra red de miembros exclusivos y rentabiliza tu perfil hoy mismo.</p>
+            <a href="#requisitos" class="btn-primary" style="scroll-behavior: smooth;">Ver Requisitos</a>
+        </div>
+    </header>
+
+    <!-- Sección de Tecnología y Método -->
+    <section id="tecnologia" class="features">
+        <div class="feature-box reveal">
+            <h3>Gestión Cuantitativa</h3>
+            <p>Ejecutamos arbitraje estadístico de datos, neutralizando el riesgo del mercado para extraer liquidez de forma 100% calculada.</p>
+        </div>
+        <div class="feature-box reveal" style="transition-delay: 0.2s;">
+            <h3>Tecnología Propietaria</h3>
+            <p>Todas las operaciones son procesadas por nuestro motor algorítmico, asegurando precisión milimétrica en cada cobertura y cruce de capital.</p>
+        </div>
+        <div class="feature-box reveal" style="transition-delay: 0.4s;">
+            <h3>Capital 100% Nuestro</h3>
+            <p>No requerimos inversión de tu parte. Nosotros financiamos la operativa completa; tú facilitas tu perfil como titular validado y coordinas el retorno de nuestro capital, sin arriesgar jamás tu dinero.</p>
+        </div>
+    </section>
+
+    <!-- Sección de Requisitos (Botón Principal) -->
+    <section id="requisitos" class="requisitos-section reveal">
+        <h2>Requisitos de Postulación</h2>
+        <ul class="requisitos-list">
+            <li class="reveal"><span>✓</span> Ser mayor de 18 años (Requisito legal).</li>
+            <li class="reveal" style="transition-delay: 0.2s;"><span>✓</span> Cédula de identidad chilena vigente (Proceso KYC).</li>
+            <li class="reveal" style="transition-delay: 0.4s;"><span>✓</span> No poseer cuentas previas en las plataformas de intercambio asociadas.</li>
+        </ul>
+        <a href="https://wa.me/56921711796?text=Hola%20Leonardo,%20me%20gustar%C3%ADa%20postular%20al%20programa%20Torres%20Capital%20Partners." class="btn-whatsapp reveal" target="_blank" style="margin-top: 40px; transition-delay: 0.6s;">Postular por WhatsApp</a>
+    </section>
+
+    <!-- Llamado a la acción y Redes (Solo íconos) -->
+    <section id="programa" class="cta-section reveal">
+        <h2>Únete a Torres Capital Partners</h2>
+        <p>Tu perfil es la llave. Nosotros ponemos el capital y la tecnología.</p>
+        
+        <div class="social-links reveal" style="transition-delay: 0.2s;">
+            <!-- Ícono WhatsApp -->
+            <a href="https://wa.me/56921711796?text=Hola%20Leonardo,%20me%20gustar%C3%ADa%20postular%20al%20programa%20Torres%20Capital%20Partners." class="social-btn whatsapp" target="_blank" aria-label="Contactar por WhatsApp">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12.031 0C5.38 0 0 5.38 0 12.031c0 2.115.547 4.188 1.584 6.002L0 24l6.113-1.603c1.761.95 3.738 1.453 5.918 1.453 6.65 0 12.031-5.38 12.031-12.031C24 5.38 18.618 0 12.031 0zm3.593 17.156c-.538 1.538-2.607 1.944-3.568 2.022-1.076.077-2.915-.224-4.834-1.748-1.92-1.523-3.328-4.008-3.414-4.123-.086-.115-1.597-2.122-1.597-4.04 0-1.918 1.006-2.858 1.353-3.242.345-.384.757-.48 1.006-.48.249 0 .498.01.718.019.23.01.537-.086.845.662.307.748 1.073 2.617 1.17 2.808.096.192.153.422.029.652-.125.23-.192.364-.384.595-.192.23-.402.488-.575.69-.192.21-.393.44-.173.825.22.384.978 1.62 2.1 2.617 1.448 1.285 2.666 1.68 3.05 1.872.383.192.613.173.843-.077.23-.25 1.006-1.17 1.275-1.572.268-.403.537-.336.883-.202.345.134 2.193 1.035 2.567 1.227.374.192.623.288.719.45.096.163.096.93-.442 2.467z"/></svg>
+            </a>
+            <!-- Ícono Instagram -->
+            <a href="#" class="social-btn instagram" target="_blank" aria-label="Seguir en Instagram (Próximamente)" title="Instagram (Próximamente)">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            </a>
+        </div>
+    </section>
+    
+    <!-- Sección de Reseñas -->
+    <section id="resenas" class="reviews-section reveal">
+        <h2>Experiencia de nuestros Miembros</h2>
+        <div class="reviews-grid" id="reviews-container">
+            <p style="color: #666; text-align: center; width: 100%;">Cargando sistema de validación...</p>
+        </div>
+    </section>
+
+    <!-- Pie de página -->
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2026 Torres Quant Solutions SpA. Todos los derechos reservados.</p>
+            <p class="signature">Software desarrollado por Leonardo Torres Avendaño.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts de Interactividad -->
+    <script>
+        // 1. EFECTO REVEAL AL HACER SCROLL
+        const revealElements = document.querySelectorAll('.reveal');
+        const revealOptions = { threshold: 0.15, rootMargin: "0px 0px -50px 0px" };
+        
+        window.revealOnScroll = new IntersectionObserver(function(entries, observer) {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add('active');
+                observer.unobserve(entry.target);
+            });
+        }, revealOptions);
+        
+        revealElements.forEach(el => window.revealOnScroll.observe(el));
+        
+        window.onload = () => {
+            document.querySelector('.hero-content').classList.add('active');
+        };
+
+        // 2. MODAL ACCESO PARTNERS Y LOGIN SECRETO DEL ADMIN
+        const modal = document.getElementById("loginModal");
+        const btnPartners = document.getElementById("btn-partners");
+        const spanClose = document.getElementsByClassName("close-modal")[0];
+        const btnAttempt = document.getElementById("btn-login-attempt");
+        const errorMsg = document.getElementById("login-error");
+
+        btnPartners.onclick = function() { modal.style.display = "flex"; }
+        spanClose.onclick = function() { modal.style.display = "none"; errorMsg.style.display = "none"; }
+        window.onclick = function(event) {
+            if (event.target == modal) { modal.style.display = "none"; errorMsg.style.display = "none"; }
+        }
+        
+        btnAttempt.onclick = async function() {
+            const email = document.getElementById("socio-id").value;
+            const pass = document.getElementById("socio-pass").value;
+            btnAttempt.innerText = "Validando en servidor...";
+            errorMsg.style.display = "none";
+
+            try {
+                await window.signIn(window.firebaseAuth, email, pass);
+                window.location.href = 'admin-lt.html';
+            } catch (error) {
+                setTimeout(() => {
+                    btnAttempt.innerText = "Ingresar al Motor";
+                    errorMsg.style.display = "block";
+                }, 1000);
+            }
+        }
+
+        // 3. NAVEGACIÓN SUAVE AL BOTÓN REQUISITOS
+        document.querySelector('.btn-primary[href="#requisitos"]').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelector('#requisitos').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // 4. EFECTO RED CUANTITATIVA
+        const canvas = document.getElementById('networkCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+        
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.4;
+                this.vy = (Math.random() - 0.5) * 0.4;
+                this.radius = Math.random() * 1.5 + 0.5;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(212, 175, 55, 0.4)';
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            let numParticles = (width * height) / 12000; 
+            for (let i = 0; i < numParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+        initParticles();
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                for (let j = i + 1; j < particles.length; j++) {
+                    let dx = particles[i].x - particles[j].x;
+                    let dy = particles[i].y - particles[j].y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 120) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(212, 175, 55, ${0.15 - dist/800})`; 
+                        ctx.lineWidth = 0.6;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+</html>

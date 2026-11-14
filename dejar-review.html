@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torres Capital | Dejar Reseña</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyAuX3bCu47kH9pYEw1DYUme8tvT733uOUc",
+          authDomain: "torres-capital-web.firebaseapp.com",
+          projectId: "torres-capital-web",
+          storageBucket: "torres-capital-web.firebasestorage.app",
+          messagingSenderId: "35392624147",
+          appId: "1:35392624147:web:4bc0b5c12a0c569b1d91e6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        function obfuscateName(fullName) {
+            return fullName.split(' ').map(word => {
+                if (word.length <= 2) return word;
+                return word.substring(0, 2) + '*'.repeat(word.length - 2);
+            }).join(' ');
+        }
+
+        document.getElementById('review-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const statusMsg = document.getElementById('status-msg');
+            
+            const rawName = document.getElementById('name').value.trim();
+            const text = document.getElementById('text').value.trim();
+            
+            if(!rawName || !text) return;
+            
+            btn.disabled = true;
+            btn.innerText = "Enviando...";
+            
+            const secureName = obfuscateName(rawName);
+
+            try {
+                await addDoc(collection(db, "reviews"), {
+                    rawName: rawName, 
+                    name: secureName, 
+                    text: text,
+                    status: "pending", 
+                    timestamp: serverTimestamp()
+                });
+                
+                document.getElementById('review-form').style.display = 'none';
+                statusMsg.style.display = 'block';
+            } catch (error) {
+                console.error("Error:", error);
+                btn.innerText = "Error. Intenta de nuevo.";
+                btn.disabled = false;
+            }
+        });
+    </script>
+</head>
+<body style="display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box;">
+    
+    <div style="background-color: #111; padding: 40px 20px; border-radius: 8px; border-top: 3px solid #d4af37; max-width: 500px; width: 100%; text-align: center; box-sizing: border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <h2 style="color: #fff; margin-bottom: 10px; font-size: 1.5rem;">Validación de Proceso</h2>
+        <p style="color: #888; margin-bottom: 30px; font-size: 0.9rem;">Por política de seguridad y protección patrimonial, tu nombre será encriptado automáticamente al publicarse.</p>
+        
+        <form id="review-form" style="display: flex; flex-direction: column; gap: 15px;">
+            <input type="text" id="name" placeholder="Tu Nombre y Apellido" required class="modal-input">
+            <textarea id="text" placeholder="Cuéntanos tu experiencia operando con Torres Capital..." required class="modal-input" style="min-height: 120px; resize: none;"></textarea>
+            <button type="submit" id="submit-btn" class="btn-primary" style="width: 100%; cursor: pointer;">Enviar Reseña Segura</button>
+        </form>
+        
+        <div id="status-msg" style="display: none; padding: 20px;">
+            <h3 style="color: #d4af37; margin-bottom: 10px;">¡Gracias!</h3>
+            <p style="color: #aaa;">Tu reseña ha sido enviada al Gestor para su validación.</p>
+        </div>
+    </div>
+
+</body>
+</html>
